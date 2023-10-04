@@ -2,6 +2,7 @@ const http = require('http');
 const url = require('url');
 const query = require('querystring');
 const html = require('./htmlHandler.js');
+const response = require('./responses.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
@@ -15,6 +16,8 @@ const onRequest = (request, response) => {
   if (urlStruct[parsedUrl.pathname]) {
     return urlStruct[parsedUrl.pathname](request, response);
   }
+
+  // default
   return html.getIndex(request, response);
 };
 
