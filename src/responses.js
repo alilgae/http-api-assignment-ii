@@ -65,8 +65,18 @@ const updateUsers = (request, response, body) => {
   return respondMeta(request, response, statusCode);
 };
 
+const notFound = (request, response) => {
+  const responseJSON = {
+    message: 'The page you are looking for was not found.',
+    id: 'notFound',
+  };
+
+  respondJSON(request, response, 404, responseJSON);
+}
+
 module.exports = {
   getUsers,
   getUsersMeta,
   updateUsers,
+  notFound,
 };
