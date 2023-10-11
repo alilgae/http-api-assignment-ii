@@ -7,44 +7,33 @@ const respondJSON = (request, response, status, obj) => {
   };
 
   response.writeHead(status, headers);
-  response.write(JSON.stringify(obj));
-  response.end();
-};
-
-// respond with just the head metadata
-const respondMeta = (request, response, status) => {
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-
-  response.writeHead(status, headers);
+  if (request.method !== 'HEAD' || status !== 204) response.write(JSON.stringify(obj));
   response.end();
 };
 
 const getUsers = (request, response) => {
+  // what we're sending back
   const obj = {
     users,
   };
 
-  respondJSON(request, response, 200, obj);
+  return respondJSON(request, response, 200, obj);
 };
 
-const getUsersMeta = (request, response) => {
-  respondMeta(request, response, 200);
-};
-
+// body - the request itself
 const updateUsers = (request, response, body) => {
   // assume missing fields
   const obj = {
-    message: 'Name and Age are both required',
+    message: 'Created Successfully',
   };
 
   if (!body.name || !body.age) {
+    obj.message = 'Name and Age are both required';
     obj.id = 'missingParams';
     return respondJSON(request, response, 400, obj);
   }
 
-  let statusCode = 204;
+  let statusCode = 204; // successful update - no body sent
 
   // create new user if they don't exist
   if (!users[body.name]) {
@@ -57,26 +46,21 @@ const updateUsers = (request, response, body) => {
   currentUser.name = body.name;
   currentUser.age = body.age;
 
-  if (statusCode === 201) {
-    obj.message = 'Created Successfully';
-    return respondJSON(request, response, statusCode, obj);
-  }
-
-  return respondMeta(request, response, statusCode);
+  return respondJSON(request, response, statusCode, obj);
 };
 
 const notFound = (request, response) => {
+  // error message
   const responseJSON = {
     message: 'The page you are looking for was not found.',
     id: 'notFound',
   };
 
-  respondJSON(request, response, 404, responseJSON);
-}
+  return respondJSON(request, response, 404, responseJSON);
+};
 
 module.exports = {
   getUsers,
-  getUsersMeta,
   updateUsers,
   notFound,
 };

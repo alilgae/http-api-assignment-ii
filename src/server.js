@@ -10,45 +10,59 @@ const urlStruct = {
   '/': html.getIndex,
   '/style.css': html.getCSS,
   '/getUsers': responseHandler.getUsers,
+  notFound: responseHandler.notFound,
 };
 
 const parseBody = (request, response, callback) => {
-  //storing the post request
+  // storing the post request
   const body = [];
 
+  // event handlers:
+
   request.on('error', (error) => {
-    //print error to console
+    // print error to console
     console.dir(error);
     response.statusCode = 400;
     response.end();
   });
 
-  //when data is sent
+  // each time binary data is sent - guaranteed in order
   request.on('data', (data) => { body.push(data); });
 
-  //when done
+  // when done sending data to us
   request.on('end', () => {
+    // we've received binary data, parse it back to a single string
     const bodyString = Buffer.concat(body).toString();
-    const bodyParams = query.parse(bodyString);
-    callback(request, response, bodyParams);
+
+    // we should have what user sends back
+    // we know what the client should send back, so we don't have to check
+    const bodyObj = query.parse(bodyString); // turns data into usable object
+
+    callback(request, response, bodyObj); // .updateUsers
   });
 };
 
 const handlePost = (request, response, parsedURL) => {
-  // /addUser
-  if(parsedURL.pathname === '/addUser') { parseBody(request, response, responseHandler.updateUsers); }
-}
+  // addUser
+  if (parsedURL.pathname === '/addUser') {
+    parseBody(request, response, responseHandler.updateUsers);
+  }
+};
 
 const onRequest = (request, response) => {
-  const parsedUrl = url.parse(request.url);
+  const parsedUrl = url.parse(request.url); // breaks into .pathname, .query, etc
+
+  // this works since we only have one post request
+  if (request.method === 'POST') {
+    return handlePost(request, response, parsedUrl);
+  }
+
   if (urlStruct[parsedUrl.pathname]) {
     return urlStruct[parsedUrl.pathname](request, response);
   }
 
-  
-
   // default
-  return html.getIndex(request, response);
+  return urlStruct.notFound(request, response);
 };
 
 http.createServer(onRequest).listen(port, () => {
